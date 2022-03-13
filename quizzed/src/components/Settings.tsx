@@ -20,8 +20,8 @@ import {BtnTemplate} from '../../agora-rn-uikit';
 
 const Settings = (props: any) => {
   const {primaryColor} = useContext(ColorContext);
-  const {isHost, sidePanel, setSidePanel} = props;
-
+  
+  const {isHost, sidePanel, setSidePanel, setIsModalOpen} = props;
   return (
     <BtnTemplate
       style={[style.localButtonWithMatchingStyle, {borderColor: primaryColor}]}

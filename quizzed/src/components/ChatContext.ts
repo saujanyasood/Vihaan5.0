@@ -12,6 +12,7 @@
 import RtmEngine from 'agora-react-native-rtm';
 import {createContext} from 'react';
 import {rtmEventsInterface} from './RTMEvents';
+import {PollContext} from './PollContext';
 
 export interface channelMessage {
   isLocal: boolean;
@@ -50,7 +51,7 @@ interface chatContext {
   privateMessageStore: any;
   sendMessage: (msg: string) => void;
   sendMessageToUid: (msg: string, uid: number) => void;
-  sendControlMessage: (msg: string) => void;
+  sendControlMessage: (msg: string, obj: object) => void;
   sendControlMessageToUid: (msg: string, uid: number) => void;
   engine: RtmEngine;
   localUid: string;
@@ -67,6 +68,7 @@ export enum controlMessageEnum {
   kickUser = '5',
   cloudRecordingActive = '6',
   cloudRecordingUnactive = '7',
+  initiatePoll = '8',
 }
 
 const ChatContext = createContext(null as unknown as chatContext);

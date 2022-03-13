@@ -1,14 +1,3 @@
-/*
-********************************************
- Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
-*********************************************
-*/
 import React, {useContext} from 'react';
 import {
   View,
@@ -22,6 +11,7 @@ import SelectDevice from '../subComponents/SelectDevice';
 import HostControlView from './HostControlView';
 import ColorContext from './ColorContext';
 import {SidePanelType} from '../subComponents/SidePanelEnum';
+import Poll from './Poll';
 
 const SettingsView = (props: any) => {
   const {isHost} = props;
@@ -35,7 +25,13 @@ const SettingsView = (props: any) => {
         <View style={style.popupPickerHolder}>
           <SelectDevice />
         </View>
-        {isHost ? <HostControlView /> : <></>}
+        {isHost ? (
+          <HostControlView />
+        ) : (
+          <> 
+            <Poll />
+          </>
+        )}
       </View>
     </View>
   );
@@ -49,8 +45,8 @@ const style = StyleSheet.create({
     paddingVertical: 5,
     flexGrow: 1,
     shadowColor: $config.PRIMARY_FONT_COLOR + '80',
-    shadowOpacity: .5,
-    shadowOffset: {width:-2, height: 0},
+    shadowOpacity: 0.5,
+    shadowOffset: {width: -2, height: 0},
     shadowRadius: 3,
     paddingHorizontal: 20,
   },

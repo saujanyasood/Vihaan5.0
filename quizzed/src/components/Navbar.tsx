@@ -32,10 +32,13 @@ import ChatContext from '../components/ChatContext';
 import mobileAndTabletCheck from '../utils/mobileWebTest';
 import {BtnTemplate} from '../../agora-rn-uikit';
 import {ImageIcon} from '../../agora-rn-uikit';
+import {PollContext} from './PollContext';
 
 const Navbar = (props: any) => {
   const {primaryColor} = useContext(ColorContext);
   const {messageStore} = useContext(ChatContext);
+  const {question, setQuestion, answers, setAnswers, setIsModalOpen} =
+    useContext(PollContext);
   const {
     // participantsView,
     // setParticipantsView,
@@ -87,7 +90,7 @@ const Navbar = (props: any) => {
               height: 20,
               margin: 1,
             }}
-            color='#FD0845'
+            color="#FD0845"
           />
           <Text
             style={{
@@ -207,34 +210,40 @@ const Navbar = (props: any) => {
               ) : (
                 <></>
               )}
-              <View style={{width: '20%', height: '100%', position: 'relative'}}>
-                    <BtnTemplate
-                      style={style.btnHolder}
-                      onPress={() => {
-                        setLastCheckedPublicState(messageStore.length);
-                        sidePanel === SidePanelType.Chat
-                          ? setSidePanel(SidePanelType.None)
-                          : setSidePanel(SidePanelType.Chat);
-                      }}
-                      name={
-                        sidePanel === SidePanelType.Chat
-                          ? 'chatIconFilled'
-                          : 'chatIcon'
-                      }
-                    />
-                    <View style={{position: 'absolute', top: Platform.OS === 'web' ? 1 : -15, left: ( Platform.OS === 'web' && isDesktop) ? 10 : 1 }}>
-                      {sidePanel !== SidePanelType.Chat &&
-                      pendingMessageLength !== 0 ? (
-                        <View style={style.chatNotification}>
-                          <Text style={{color: $config.SECONDARY_FONT_COLOR}}>
-                            {pendingMessageLength}
-                          </Text>
-                        </View>
-                      ) : (
-                        <></>
-                      )}
+              <View
+                style={{width: '20%', height: '100%', position: 'relative'}}>
+                <BtnTemplate
+                  style={style.btnHolder}
+                  onPress={() => {
+                    setLastCheckedPublicState(messageStore.length);
+                    sidePanel === SidePanelType.Chat
+                      ? setSidePanel(SidePanelType.None)
+                      : setSidePanel(SidePanelType.Chat);
+                  }}
+                  name={
+                    sidePanel === SidePanelType.Chat
+                      ? 'chatIconFilled'
+                      : 'chatIcon'
+                  }
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: Platform.OS === 'web' ? 1 : -15,
+                    left: Platform.OS === 'web' && isDesktop ? 10 : 1,
+                  }}>
+                  {sidePanel !== SidePanelType.Chat &&
+                  pendingMessageLength !== 0 ? (
+                    <View style={style.chatNotification}>
+                      <Text style={{color: $config.SECONDARY_FONT_COLOR}}>
+                        {pendingMessageLength}
+                      </Text>
                     </View>
-                  </View>
+                  ) : (
+                    <></>
+                  )}
+                </View>
+              </View>
             </>
           ) : (
             <></>
@@ -254,15 +263,15 @@ const Navbar = (props: any) => {
             <></>
           )}
           <View style={{width: '20%', height: '100%'}}>
-              <BtnTemplate
-                style={style.btnHolder}
-                onPress={() => {
-                  setLayout((l: Layout) =>
-                    l === Layout.Pinned ? Layout.Grid : Layout.Pinned,
-                  );
-                }}
-                name={layout ? 'pinnedLayoutIcon' : 'gridLayoutIcon'}
-              />
+            <BtnTemplate
+              style={style.btnHolder}
+              onPress={() => {
+                setLayout((l: Layout) =>
+                  l === Layout.Pinned ? Layout.Grid : Layout.Pinned,
+                );
+              }}
+              name={layout ? 'pinnedLayoutIcon' : 'gridLayoutIcon'}
+            />
           </View>
           {/** Show setting icon only in non native apps
            * show in web/electron/mobile web
@@ -286,6 +295,7 @@ const Navbar = (props: any) => {
                   sidePanel={sidePanel}
                   setSidePanel={setSidePanel}
                   isHost={isHost}
+                  setIsModalOpen={setIsModalOpen}
                 />
               </View>
             </>
@@ -334,8 +344,8 @@ const style = StyleSheet.create({
     margin: 1,
     resizeMode: 'contain',
   },
-  btnHolder: {   
-    marginHorizontal: mobileAndTabletCheck() ? 2 : 0, 
+  btnHolder: {
+    marginHorizontal: mobileAndTabletCheck() ? 2 : 0,
     width: '100%',
     height: '100%',
     resizeMode: 'contain',

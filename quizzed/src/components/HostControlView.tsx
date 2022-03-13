@@ -9,35 +9,80 @@
  information visit https://appbuilder.agora.io. 
 *********************************************
 */
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import chatContext, {controlMessageEnum} from './ChatContext';
 import ColorContext from './ColorContext';
 import SecondaryButton from '../atoms/SecondaryButton';
+
 import TextInput from '../atoms/TextInput';
+
+import {PollContext} from './PollContext';
+import Poll from './Poll';
+import PrimaryButton from '../atoms/PrimaryButton';
 
 const HostControlView = () => {
   const {sendControlMessage} = useContext(chatContext);
   const {primaryColor} = useContext(ColorContext);
+  const {question, setQuestion, answers, setAnswers, setIsModalOpen} =
+    useContext(PollContext);
+
   return (
     <>
       <Text style={style.heading}>Host Controls</Text>
       <View>
         <View style={style.btnContainer}>
           <SecondaryButton
-            onPress={() => sendControlMessage(controlMessageEnum.muteAudio)}
+            onPress={() => sendControlMessage(controlMessageEnum.muteAudio, [])}
             text={'Mute all audios'}
           />
         </View>
         <View style={style.btnContainer}>
           <SecondaryButton
-            onPress={() => sendControlMessage(controlMessageEnum.muteVideo)}
+            onPress={() => sendControlMessage(controlMessageEnum.muteVideo, [])}
             text={'Mute all videos'}
           />
         </View>
         <Text style={style.heading}>Create a Poll</Text>
-        <View>
-          {/* <TextInput value={} onChangeText={} placeholder="Type a Question" /> */}
+        <View style={{marginTop: '0px'}}>
+          <TextInput
+            value={question}
+            onChangeText={setQuestion}
+            placeholder="Type a Question"
+            style={{marginBottom: '-20px'}}
+          />
+          <br />
+          {answers.map((answer: String, i) => (
+            <div key={i}>
+              <br />
+              <TextInput
+                value={answer.option}
+                onChangeText={(value) =>
+                  setAnswers([
+                    ...answers.slice(0, i),
+                    {option: value, votes: 0},
+                    ...answers.slice(i + 1),
+                  ])
+                }
+                placeholder={`Poll ${i + 1}`}
+              />
+            </div>
+          ))}
+        </View>
+        <View style={style.btnContainer}>
+          <Poll />
+          <PrimaryButton
+            onPress={() => {
+              setIsModalOpen(true);
+              
+              console.log('Hello');
+              sendControlMessage(controlMessageEnum.initiatePoll, {
+                question,
+                answers,
+              });
+            }}
+            text="Start Poll"
+          />
         </View>
       </View>
     </>
@@ -55,6 +100,8 @@ const style = StyleSheet.create({
   btnContainer: {
     alignItems: 'center',
     marginVertical: 15,
+    marginBottom: '0px',
+    marginTop: '5px',
   },
 });
 

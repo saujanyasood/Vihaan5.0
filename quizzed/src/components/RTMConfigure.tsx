@@ -23,6 +23,7 @@ import {
 import {Platform} from 'react-native';
 import {backOff} from 'exponential-backoff';
 import events from './RTMEvents';
+import {PollContext} from './PollContext';
 
 export enum UserType {
   Normal,
@@ -72,6 +73,8 @@ const RtmConfigure = (props: any) => {
     });
   };
 
+  const {setQuestion, setAnswers, setIsModalOpen} = useContext(PollContext);
+
   const addMessageToPrivateStore = (
     uid: string,
     msg: {
@@ -96,118 +99,118 @@ const RtmConfigure = (props: any) => {
       return {...newState};
     });
   };
-  
+
   const doLoginAndSetupRTM = async () => {
     try {
       await engine.current.login({
         uid: localUid.current,
         token: rtcProps.rtm,
       });
-      timerValueRef.current = 5
-      setAttribute();      
+      timerValueRef.current = 5;
+      setAttribute();
     } catch (error) {
-      setTimeout( async () => {
+      setTimeout(async () => {
         timerValueRef.current = timerValueRef.current + timerValueRef.current;
         doLoginAndSetupRTM();
-      }, timerValueRef.current * 1000 );
+      }, timerValueRef.current * 1000);
     }
-  }
+  };
 
-  const setAttribute = async () => {    
+  const setAttribute = async () => {
     try {
       await engine.current.setLocalUserAttributes([
         {key: 'name', value: name || 'User'},
         {key: 'screenUid', value: String(rtcProps.screenShareUid)},
       ]);
-      timerValueRef.current = 5
-      joinChannel()            
+      timerValueRef.current = 5;
+      joinChannel();
     } catch (error) {
-      setTimeout( async () => {
+      setTimeout(async () => {
         timerValueRef.current = timerValueRef.current + timerValueRef.current;
         setAttribute();
-      }, timerValueRef.current * 1000 );
+      }, timerValueRef.current * 1000);
     }
-  }
+  };
 
   const joinChannel = async () => {
     try {
-      await engine.current.joinChannel(rtcProps.channel);  
-      timerValueRef.current = 5
-      getMembers()      
+      await engine.current.joinChannel(rtcProps.channel);
+      timerValueRef.current = 5;
+      getMembers();
     } catch (error) {
-      setTimeout( async () => {
+      setTimeout(async () => {
         timerValueRef.current = timerValueRef.current + timerValueRef.current;
         joinChannel();
-      }, timerValueRef.current * 1000 );
-    }  
-  }
+      }, timerValueRef.current * 1000);
+    }
+  };
 
   const getMembers = async () => {
     try {
       await engine.current
-      .getChannelMembersBychannelId(rtcProps.channel)
-      .then((data) => {
-        data.members.map(async (member: any) => {
-          const backoffAttributes = backOff(
-            async () => {
-              const attr = await engine.current.getUserAttributesByUid(
-                member.uid,
-              );
-              if (attr?.attributes?.name && attr?.attributes?.screenUid) {
-                return attr;
-              } else {
-                throw attr;
-              }
-            },
-            {
-              retry: (e, idx) => {
-                console.log(
-                  `[retrying] Attempt ${idx}. Fetching ${member.uid}'s name`,
-                  e,
+        .getChannelMembersBychannelId(rtcProps.channel)
+        .then((data) => {
+          data.members.map(async (member: any) => {
+            const backoffAttributes = backOff(
+              async () => {
+                const attr = await engine.current.getUserAttributesByUid(
+                  member.uid,
                 );
-                return true;
+                if (attr?.attributes?.name && attr?.attributes?.screenUid) {
+                  return attr;
+                } else {
+                  throw attr;
+                }
               },
-            },
-          );
-          try {
-            const attr = await backoffAttributes;
-            console.log('[user attributes]:', {attr});
-            setUserList((prevState) => {
-              return {
-                ...prevState,
-                [member.uid]: {
-                  name: attr?.attributes?.name || 'User',
-                  type: UserType.Normal,
-                  screenUid: parseInt(attr?.attributes?.screenUid),
+              {
+                retry: (e, idx) => {
+                  console.log(
+                    `[retrying] Attempt ${idx}. Fetching ${member.uid}'s name`,
+                    e,
+                  );
+                  return true;
                 },
-                [parseInt(attr?.attributes?.screenUid)]: {
-                  name: `${attr?.attributes?.name || 'User'}'s screenshare`,
-                  type: UserType.ScreenShare,
-                },
-              };
-            });
-          } catch (e) {
-            console.error(`Could not retrieve name of ${member.uid}`, e);
-          }
+              },
+            );
+            try {
+              const attr = await backoffAttributes;
+              console.log('[user attributes]:', {attr});
+              setUserList((prevState) => {
+                return {
+                  ...prevState,
+                  [member.uid]: {
+                    name: attr?.attributes?.name || 'User',
+                    type: UserType.Normal,
+                    screenUid: parseInt(attr?.attributes?.screenUid),
+                  },
+                  [parseInt(attr?.attributes?.screenUid)]: {
+                    name: `${attr?.attributes?.name || 'User'}'s screenshare`,
+                    type: UserType.ScreenShare,
+                  },
+                };
+              });
+            } catch (e) {
+              console.error(`Could not retrieve name of ${member.uid}`, e);
+            }
+          });
+          setLogin(true);
+          console.log('RTM init done');
         });
-        setLogin(true);
-        console.log('RTM init done');
-      });
-      timerValueRef.current = 5
+      timerValueRef.current = 5;
     } catch (error) {
-      setTimeout( async () => {
+      setTimeout(async () => {
         timerValueRef.current = timerValueRef.current + timerValueRef.current;
         getMembers();
-      }, timerValueRef.current * 1000 );
-    } 
-  }
+      }, timerValueRef.current * 1000);
+    }
+  };
   const init = async () => {
     engine.current = new RtmEngine();
     rtcProps.uid
       ? (localUid.current = rtcProps.uid + '')
       : (localUid.current = '' + timeNow());
     engine.current.on('connectionStateChanged', (evt: any) => {
-       //console.log(evt);
+      //console.log(evt);
     });
     engine.current.on('error', (evt: any) => {
       // console.log(evt);
@@ -367,7 +370,14 @@ const RtmConfigure = (props: any) => {
                 setRecordingActive(false);
                 break;
               default:
-                throw new Error('Unsupported message type');
+                if (text[1] === controlMessageEnum.initiatePoll) {
+                  const {question, answers} = JSON.parse(text.slice(2));
+                  setQuestion(question);
+                  setAnswers(answers);
+                  setIsModalOpen(true);
+                } else {
+                  throw new Error('Unsupported message type');
+                }
             }
           } catch (e) {
             events.emit(messageChannelType.Public, null, {
@@ -397,7 +407,6 @@ const RtmConfigure = (props: any) => {
 
     await engine.current.createClient(rtcProps.appId);
     doLoginAndSetupRTM();
-    
   };
 
   const sendMessage = async (msg: string) => {
@@ -442,16 +451,25 @@ const RtmConfigure = (props: any) => {
     );
   };
 
-  const sendControlMessage = async (msg: string) => {
+  const sendControlMessage = async (msg: string, obj: object) => {
     const text = stringifyPayload(
       messageSourceType.Core,
       messageActionType.Control,
       msg,
     );
-    await (engine.current as RtmEngine).sendMessageByChannelId(
-      rtcProps.channel,
-      text,
-    );
+    console.log(msg);
+    if (msg === '8') {
+      await (engine.current as RtmEngine).sendMessageByChannelId(
+        rtcProps.channel,
+        messageActionType.Control + msg + JSON.stringify(obj),
+      );
+      console.log(messageActionType.Control + msg + JSON.stringify(obj));
+    } else {
+      await (engine.current as RtmEngine).sendMessageByChannelId(
+        rtcProps.channel,
+        text,
+      );
+    }
   };
 
   const sendControlMessageToUid = async (msg: string, uid: number) => {
